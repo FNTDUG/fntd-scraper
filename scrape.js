@@ -6,13 +6,23 @@ const { chromium } = require("playwright");
 
   const url = "https://fntd2.com/list";
 
-  await page.goto(url, { waitUntil: "domcontentloaded" });
+  page.on("response", async (response) => {
+    const url = response.url();
+
+    if (url.includes("list") || url.includes("api")) {
+      try {
+        const text = await response.text();
+        if (text.length > 100) {
+          console.log("\n📡 API Response from:", url);
+          console.log(text.slice(0, 500));
+        }
+      } catch {}
+    }
+  });
+
+  await page.goto(url, { waitUntil: "networkidle" });
 
   await page.waitForTimeout(5000);
-
-  const content = await page.content();
-
-  console.log(content.slice(0, 500));
 
   await browser.close();
 })();
